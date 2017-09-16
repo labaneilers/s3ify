@@ -1,11 +1,6 @@
-// curl -X GET "https://merchproducturl.storefront.vpsvc.com/v1/url/en-us?url-version=v1&requester=swagger" -H  "accept: application/json"
-
 const request = require('request-promise-native');
-
 const AWS = require('aws-sdk');
-
 const s3 = new AWS.S3();
-
 const zlib = require('zlib');
 
 const cultures = [
@@ -43,11 +38,6 @@ const cultures = [
     "en-in"
 ];
 
-// var cultures = [
-//     "cs-cz",
-//     "en-us"
-// ];
-
 var responses = cultures.map(culture => {
     return request({
         uri: "https://merchproducturl.storefront.vpsvc.com/v1/url/" + culture + "?url-version=v1&requester=s3ify-laban",
@@ -63,8 +53,7 @@ var responses = cultures.map(culture => {
 
 // When all requests are complete, assemble results into a single json object and upload it to s3
 Promise.all(responses)
-    .then(function (completeResponses) {
-
+    .then(completeResponses => {
         // Put complete responses into a dictionary keyed by culture
         var out = {};
         completeResponses
