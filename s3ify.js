@@ -1,12 +1,14 @@
 // curl -X GET "https://merchproducturl.storefront.vpsvc.com/v1/url/en-us?url-version=v1&requester=swagger" -H  "accept: application/json"
 
-var request = require('request-promise-native');
+const request = require('request-promise-native');
 
-var AWS = require('aws-sdk');
+const AWS = require('aws-sdk');
 
-var s3 = new AWS.S3();
+const s3 = new AWS.S3();
 
-var cultures = [
+const zlib = require('zlib');
+
+const cultures = [
     "en-us",
     "en-gb",
     "de-de",
@@ -64,7 +66,8 @@ function putS3(keyName, data) {
         Bucket: "s3ify-experiment", 
         Key: keyName, 
         Body: data, 
-        ContentType: "application/json" 
+        ContentType: "application/json",
+        ContentEncoding: "gzip"
         })
         .promise();
 }
@@ -74,6 +77,9 @@ Promise.all(responses)
         var out = {};
         completeResponses.filter(r => !r.error).forEach(r => out[r.culture] = r.response.body);
 
-        return putS3("mp-url", JSON.stringify(out, null, 2))
+        // Gzip body
+        var body = zlib.gzipSync(JSON.stringify(out, null, 2));
+
+        return putS3("mp-url", body)
             .catch(err => console.error("S3 upload error: " + err));
     });
