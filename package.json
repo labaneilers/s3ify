@@ -1,0 +1,14 @@
+{
+  "name": "s3ify",
+  "version": "1.0.0",
+  "description": "Reads from a web service and writes to s3",
+  "main": "s3ify.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "leilers",
+  "license": "ISC",
+  "dependencies": {
+    "request-promise-native": "^1.0.4"
+  }
+}
