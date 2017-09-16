@@ -9,6 +9,8 @@
   "author": "leilers",
   "license": "ISC",
   "dependencies": {
+    "aws-sdk": "^2.117.0",
+    "request": "^2.81.0",
     "request-promise-native": "^1.0.4"
   }
 }
