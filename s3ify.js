@@ -61,25 +61,27 @@ var responses = cultures.map(culture => {
     });
 });
 
-function putS3(keyName, data) {
-    return s3.putObject({ 
-        Bucket: "s3ify-experiment", 
-        Key: keyName, 
-        Body: data, 
-        ContentType: "application/json",
-        ContentEncoding: "gzip"
-        })
-        .promise();
-}
-
+// When all requests are complete, assemble results into a single json object and upload it to s3
 Promise.all(responses)
     .then(function (completeResponses) {
+
+        // Put complete responses into a dictionary keyed by culture
         var out = {};
-        completeResponses.filter(r => !r.error).forEach(r => out[r.culture] = r.response.body);
+        completeResponses
+            .filter(r => !r.error) // filter out error responses
+            .forEach(r => out[r.culture] = r.response.body);
 
         // Gzip body
         var body = zlib.gzipSync(JSON.stringify(out, null, 2));
 
-        return putS3("mp-url", body)
+        // put to s3
+        return s3.putObject({ 
+            Bucket: "s3ify-experiment", 
+            Key: "mp-url", 
+            Body: body, 
+            ContentType: "application/json",
+            ContentEncoding: "gzip"
+            })
+            .promise()
             .catch(err => console.error("S3 upload error: " + err));
     });
