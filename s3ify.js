@@ -46,19 +46,14 @@ var cultures = [
 //     "en-us"
 // ];
 
-var responses = cultures.map(function (culture) {
+var responses = cultures.map(culture => {
     return request({
         uri: "https://merchproducturl.storefront.vpsvc.com/v1/url/" + culture + "?url-version=v1&requester=s3ify-laban",
         resolveWithFullResponse: true,
         json: true
     })
-    .then(function (response) {
-        return {
-            response: response,
-            culture: culture
-        };
-    })
-    .catch(function (err) {
+    .then(resp => { return { response: resp, culture: culture }; })
+    .catch(err => {
         console.error("Service error: " + err);
         return err;
     });
@@ -81,7 +76,4 @@ Promise.all(responses)
 
         return putS3("mp-url", JSON.stringify(out, null, 2))
             .catch(err => console.error("S3 upload error: " + err));
-    })
-    .catch(function (err) {
-        console.error("ALL err: " + err);
     });
