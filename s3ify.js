@@ -2,45 +2,49 @@
 
 var request = require('request-promise-native');
 
-// var cultures = [
-//     "en-us",
-//     "en-gb",
-//     "de-de",
-//     "ja-jp",
-//     "en-gb",
-//     "en-ca",
-//     "en-au",
-//     "fr-fr",
-//     "it-it",
-//     "sv-se",
-//     "nl-nl",
-//     "es-es",
-//     "es-us",
-//     "fr-ca",
-//     "fr-be",
-//     "nl-be",
-//     "de-ch",
-//     "fr-ch",
-//     "it-ch",
-//     "en-ie",
-//     "en-nz",
-//     "nb-no",
-//     "da-dk",
-//     "de-at",
-//     "fi-fi",
-//     "pt-pt",
-//     "cs-cz",
-//     "en-sg",
-//     "ko-kr",
-//     "tr-tr",
-//     "zh-tw",
-//     "en-in"
-// ];
+var AWS = require('aws-sdk');
+
+var s3 = new AWS.S3();
 
 var cultures = [
+    "en-us",
+    "en-gb",
+    "de-de",
+    "ja-jp",
+    "en-gb",
+    "en-ca",
+    "en-au",
+    "fr-fr",
+    "it-it",
+    "sv-se",
+    "nl-nl",
+    "es-es",
+    "es-us",
+    "fr-ca",
+    "fr-be",
+    "nl-be",
+    "de-ch",
+    "fr-ch",
+    "it-ch",
+    "en-ie",
+    "en-nz",
+    "nb-no",
+    "da-dk",
+    "de-at",
+    "fi-fi",
+    "pt-pt",
     "cs-cz",
-    "en-us"
+    "en-sg",
+    "ko-kr",
+    "tr-tr",
+    "zh-tw",
+    "en-in"
 ];
+
+// var cultures = [
+//     "cs-cz",
+//     "en-us"
+// ];
 
 var responses = cultures.map(function (culture) {
     return request({
@@ -49,26 +53,35 @@ var responses = cultures.map(function (culture) {
         json: true
     })
     .then(function (response) {
-        return response;
+        return {
+            response: response,
+            culture: culture
+        };
     })
     .catch(function (err) {
+        console.error("Service error: " + err);
         return err;
     });
 });
 
+function putS3(keyName, data) {
+    return s3.putObject({ 
+        Bucket: "s3ify-experiment", 
+        Key: keyName, 
+        Body: data, 
+        ContentType: "application/json" 
+        })
+        .promise();
+}
+
 Promise.all(responses)
     .then(function (completeResponses) {
-        completeResponses.forEach(function (resp) {
-            if (resp.body) {
-                console.log(resp.body);
-            } else {
-                console.log(resp.message);
-            }
-        });
+        var out = {};
+        completeResponses.filter(r => !r.error).forEach(r => out[r.culture] = r.response.body);
+
+        return putS3("mp-url", JSON.stringify(out, null, 2))
+            .catch(err => console.error("S3 upload error: " + err));
     })
     .catch(function (err) {
-        console.log("ALL err: " + err);
+        console.error("ALL err: " + err);
     });
-
-
-
