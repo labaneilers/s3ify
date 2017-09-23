@@ -1,3 +1,5 @@
+"use strict"
+
 const request = require('request-promise-native');
 const AWS = require('aws-sdk');
 const s3 = new AWS.S3();
@@ -57,6 +59,9 @@ function processResponsesAndUpload(responses) {
     // When all requests are complete, assemble results into a single json object and upload it to s3
     return Promise.all(responses)
         .then(completeResponses => {
+
+            console.log("All responses completed");
+
             // Put complete responses into a dictionary keyed by culture
             var out = {};
             completeResponses
@@ -75,12 +80,23 @@ function processResponsesAndUpload(responses) {
                 ContentEncoding: "gzip"
                 })
                 .promise()
+                .then(r => console.log("Uploaded to s3"));
         });
 }
 
 exports.handler = function (evt, context, callback) {    
+    console.log("Starting");
     var responses = getMapsByCulture();
     processResponsesAndUpload(responses)
-        .then(r => callback(null, "success"))
+        .then(r => {
+            console.log("Success");
+
+            var response = {
+                statusCode: 200,
+                body: JSON.stringify({ status: "OK" })
+            };
+
+            callback(null, response);
+        })
         .catch(err => callback(err));
 };
